@@ -8,6 +8,9 @@ contains
 
     real, dimension(:,:), allocatable, intent(out) :: field
     character(len=*), intent(in) :: filename
+    character(len=60) :: str
+    integer :: nx,ny!,i
+
 
     ! TODO: implement function that will:
     ! open the file
@@ -16,8 +19,20 @@ contains
     ! read rest of the file into field
     ! close the file
 
+    open(10, file=filename, status='old')
+    read(10,*) str, nx, ny  !read header
+    !write(*,*) 'String', str
+    !read(str,'(2x,i3,xi3)') nx, ny
+    write(*,*) nx, ny
 
+    allocate(field(nx,ny))
 
+    !do i=1,nx
+    
+    read(10,*) field(:,:)
+    field = transpose(field)
+    !end do
+    close(10)
 
 
 
