@@ -4,7 +4,8 @@ program coll_exer
 
   integer, parameter :: n_mpi_tasks = 4
 
-  integer :: ntasks, rank, ierr
+  type(mpi_comm) :: newcomm, comm1, comm2
+  integer :: ntasks, rank, ierr, color
   integer, dimension(n_mpi_tasks) :: rcv, dis 
   integer, dimension(2*n_mpi_tasks) :: sendbuf, recvbuf, rep, red
   integer, dimension(2*n_mpi_tasks**2) :: printbuf
@@ -28,6 +29,20 @@ program coll_exer
   call print_buffers(sendbuf)
 
   if(rank == 0) rep=sendbuf
+
+  if (rank == 0 .or. rank == 1) then
+     color = 1
+     newcomm = comm1
+  else
+     color = 2
+     newcomm = comm2
+  end if
+
+  call mpi_comm_split(MPI_COMM_WORLD, color, rank, newcomm, ierr)
+
+  call mpi_reduce(sendbuf, recvbuf, 2*n_mpi_tasks, mpi_integer, mpi_sum, 0, newcomm)
+
+  call print_buffers(recvbuf)
 
   ! TODO: use a single collective communication call (and maybe prepare
   !       some parameters for the call)

@@ -4,7 +4,7 @@ program basic
 
   implicit none
   integer, parameter :: msgsize = 10000000
-  integer :: rc, myid, ntasks
+  integer :: rc, myid, ntasks, source, tag
   integer :: message(msgsize)
   integer :: receiveBuffer(msgsize)
   type(mpi_status) :: status
@@ -20,13 +20,26 @@ program basic
   ! Start measuring the time spent in communication
   call mpi_barrier(mpi_comm_world, rc)
   t0 = mpi_wtime()
+  
+  if (myid > 0 .and. myid < ntasks-1) then
+     source = myid-1
+     tag = myid+1
+  elseif (myid > 
+     source = 
 
   ! TODO: Send and receive as defined in the assignment
   if (myid < ntasks-1) then
+     call mpi_send(message,msgsize,MPI_INTEGER,myid+1,myid+1,MPI_COMM_WORLD,rc)
+     if (myid >0) then
+     	call mpi_recv(receiveBuffer,msgsize,MPI_INTEGER,myid-1,myid,MPI_COMM_WORLD,status,rc)
+     end if
 
      write(*,'(A10,I3,A20,I8,A,I3,A,I3)') 'Sender: ', myid, &
           ' Sent elements: ', msgsize, &
           '. Tag: ', myid+1, '. Receiver: ', myid+1
+
+  else
+     call mpi_recv(receiveBuffer,msgsize,MPI_INTEGER,myid-1,myid,MPI_COMM_WORLD,status,rc)
   end if
 
   if (myid > 0) then

@@ -52,6 +52,10 @@ contains
 
     ! TODO: implement the file reading
     ! Read the header
+    open(10,file=filename,status='old')
+    read(10,*) dummy, nx, ny
+    
+    CALL set_field_dimensions(field0,nx,ny)
 
     ! Initialize the field metadata (nx, ny, dx, dy). You can use
     ! the utilite routine set_field_dimensions from module heat
@@ -60,10 +64,12 @@ contains
     ! also a halo region (one layer of extra space in all directions which
     ! is used as boundary condition).
 
-
+    allocate(field0%data(0:nx+1,0:ny+1))
 
     ! Read the data
-
+    do i=1,nx
+       read(10,*) field0%data(i,1:ny)
+    end do
 
     ! TODO end
 
