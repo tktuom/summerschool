@@ -13,6 +13,7 @@ program datatype_struct
   integer :: i, ierror,  myid,  ntasks
   type(particle) :: particles(n)
 
+  type(mpi_status) :: status
   integer, parameter :: cnt = 3
   type(mpi_datatype) :: particle_mpi_type, temp_type, types(cnt)
   integer :: blocklen(cnt)
@@ -33,13 +34,37 @@ program datatype_struct
      end do
   end if
 
+  types = [mpi_real, mpi_integer, mpi_character]
+
+  blocklen=[3,1,1]
+  call mpi_get_address(particles(1)%coords, disp(1))
+  call mpi_get_address(particles(1)%charge, disp(2))
+  call mpi_get_address(particles(1)%label, disp(3))
+  disp(3) = disp(3)-disp(1)
+  disp(2) = disp(2)-disp(1)
+  disp(1) = 0
+  lb = disp(1)
+
   ! TODO: define the datatype for type particle
+  call mpi_type_create_struct(3,blocklen,disp,types,particle_mpi_type,ierror)
+  call mpi_type_commit(particle_mpi_type, ierror)
+
 
   ! TODO: Check extent.
   ! (Not really neccessary on most systems.)
+  call mpi_type_get_extent(particle_mpi_type,lb,extent)
+
+
+  write(*,*) 'Extent=   ', extent
+  write(*,*) 'Displacement=    ', disp(3)-disp(1)+2
+
   ! TODO: resize the particle_mpi_type if needed
-  if(extent /= disp(2) - disp(1)) then
+  if(extent /= disp(3) - disp(1) +2) then
      ! TODO: resize the particle_mpi_type if needed
+     write(*,*) 'Resizing the extent'
+     temp_type = particle_mpi_type
+     call mpi_type_create_resized(temp_type,lb,extent,particle_mpi_type,ierror)
+     call mpi_type_commit(particle_mpi_type, ierror)
   end if
 
   t1 = MPI_WTIME()
@@ -55,6 +80,26 @@ program datatype_struct
      end do
   end if
   t2 = MPI_WTIME()
+
+  write(*,*) "Time: ", myid, (t2-t1) / 1000d0
+  write(*,*) "Check:", myid, particles(n)%coords(1)
+
+  if(myid==1) then
+     particles(:)%coords(1) = 0
+     particles(:)%coords(2) = 0
+     particles(:)%coords(3) = 0
+     particles(:)%charge = 0
+     particles(:)%label = 'Co'
+  end if
+
+  t1 = mpi_wtime()
+  if (myid == 0) then
+     call mpi_send(particles, int(n*extent), mpi_byte, 1, 123, MPI_COMM_WORLD,ierror)
+  else
+     call mpi_recv(particles, int(n*extent), mpi_byte, 0, 123,MPI_COMM_WORLD,&
+                  status, ierror)
+  end if
+  t2 = mpi_wtime()
 
   write(*,*) "Time: ", myid, (t2-t1) / 1000d0
   write(*,*) "Check:", myid, particles(n)%coords(1)
