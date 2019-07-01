@@ -3,6 +3,10 @@
 *.mod
 \#*
 *~ 
+*.out
+*.dat
+*.err
+*.png
 
 #ignore default binary name
 a.out
