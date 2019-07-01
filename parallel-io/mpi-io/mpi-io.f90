@@ -26,24 +26,36 @@ program pario
 
   localvector = [(i + my_id * localsize, i=1,localsize)]
 
-  call mpiio_writer()
+  call mpiio_writer(localvector)
 
   deallocate(localvector)
   call mpi_finalize(rc)
 
 contains
 
-  subroutine mpiio_writer()
+  subroutine mpiio_writer(localvector)
     implicit none
     integer :: rc, dsize
     type(mpi_file) :: fh
     integer(kind=MPI_OFFSET_KIND) :: offset;
+    type(mpi_status) :: status
+    integer, dimension(:), intent(in) :: localvector
 
     call mpi_type_size(MPI_INTEGER, dsize, rc)
 
     ! TODO: write the output file "mpiio.dat" using MPI IO. Each
     !       rank should write their own local vectors to correct
     !       locations in the output file.
+
+    call mpi_file_open(mpi_comm_world,'mpiio.dat', mpi_mode_wronly, mpi_info_null, fh, rc)
+
+    offset = dsize * size(localvector) * my_id
+    write(*,'(2(a,3X,i5,3X))') 'I am task', my_id,'length of my localvector is',size(localvector)  
+    call mpi_file_set_view(fh,offset, mpi_integer, mpi_integer, 'native',mpi_info_null,rc)
+
+    call mpi_file_write_all(fh, localvector, size(localvector), mpi_integer, status, rc)
+
+    call mpi_file_close(fh,rc)
 
   end subroutine mpiio_writer
 

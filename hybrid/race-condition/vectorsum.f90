@@ -7,6 +7,7 @@ program vectorsum
   integer(kind=ik), dimension(nx) :: vecA
   integer(kind=ik) :: sum, psum, sumex
   integer(kind=ik) :: i
+  integer :: tid
 
   ! Initialization of vector
   do i = 1, nx
@@ -18,8 +19,16 @@ program vectorsum
 
   sum = 0
   ! TODO: Parallelize the computation
+!$omp parallel private(i,psum,tid)
+  tid = omp_get_thread_num()
+  psum = sum
+  !$omp do schedule(static)
   do i = 1, nx
-     sum = sum + vecA(i)
+     psum = psum + vecA(i)
   end do
+  !$omp end do
+  sum = sum + psum
+  write(*,*) 'I am thread', tid,', I got psum, sum:', psum, sum
+!$omp end parallel
   write(*,*) 'Sum: ', sum
 end program vectorsum

@@ -7,6 +7,9 @@ program coll_exer
   integer :: ntasks, rank, ierr, i, color, sub_comm
   integer, dimension(2*n_mpi_tasks) :: sendbuf, recvbuf
   integer, dimension(2*n_mpi_tasks**2) :: printbuf
+  type(mpi_request) :: req
+  logical :: flg
+  type(mpi_status) :: status
 
   call mpi_init(ierr)
   call mpi_comm_size(MPI_COMM_WORLD, ntasks, ierr)
@@ -30,10 +33,21 @@ program coll_exer
   ! some parameters for the call)
   ! TODO: remember to complete the collective
 
+  call mpi_ireduce(sendbuf, recvbuf, 2*n_mpi_tasks, mpi_integer, mpi_sum,&
+                      0, mpi_comm_world, req, ierr)
+
+  call mpi_test(req, flg, status)
+  write(*,*) "Is it done for me? Id=   ", rank,  flg
+
+  call mpi_wait(req, status)
+
+  call mpi_test(req, flg, status)
+  write(*,*) "Now? Id=   ", rank,  flg
   ! Print data that was received
   ! TODO: add correct buffer
-  call print_buffers(...)
-
+  if (rank == 0) then
+     call print_buffers(recvbuf)
+  end if
   call mpi_finalize(ierr)
 
 contains

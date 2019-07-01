@@ -4,10 +4,11 @@ program basic
 
   implicit none
   integer, parameter :: msgsize = 10000000
-  integer :: rc, myid, ntasks, source, tag
+  integer :: rc, myid, ntasks, source, tag, dest
   integer :: message(msgsize)
   integer :: receiveBuffer(msgsize)
-  type(mpi_status) :: status
+  type(mpi_status) :: status(2)
+  type(mpi_request) :: req(2)
 
   real(REAL64) :: t0, t1
 
@@ -17,33 +18,48 @@ program basic
 
   message = myid
 
+  write(*,*) 'Myid=', myid, 'Message=   ', message(1)
+
   ! Start measuring the time spent in communication
   call mpi_barrier(mpi_comm_world, rc)
   t0 = mpi_wtime()
-  
-  if (myid > 0 .and. myid < ntasks-1) then
-     source = myid-1
-     tag = myid+1
-  elseif (myid > 
-     source = 
 
-  ! TODO: Send and receive as defined in the assignment
+  tag = myid+1  
+
   if (myid < ntasks-1) then
-     call mpi_send(message,msgsize,MPI_INTEGER,myid+1,myid+1,MPI_COMM_WORLD,rc)
-     if (myid >0) then
-     	call mpi_recv(receiveBuffer,msgsize,MPI_INTEGER,myid-1,myid,MPI_COMM_WORLD,status,rc)
-     end if
-
-     write(*,'(A10,I3,A20,I8,A,I3,A,I3)') 'Sender: ', myid, &
-          ' Sent elements: ', msgsize, &
-          '. Tag: ', myid+1, '. Receiver: ', myid+1
-
+     dest = myid+1
   else
-     call mpi_recv(receiveBuffer,msgsize,MPI_INTEGER,myid-1,myid,MPI_COMM_WORLD,status,rc)
+     dest = MPI_PROC_NULL
   end if
 
-  if (myid > 0) then
+  if(myid == ntasks-1) then
+     write(*,*) ntasks-1, dest
+  end if
 
+  if (myid == 0) then
+     source = MPI_PROC_NULL
+  else
+     source = myid-1
+  end if
+  ! TODO: Send and receive as defined in the assignment
+  !if (myid < ntasks-1) then
+  call mpi_isend(message,msgsize,MPI_INTEGER,dest,tag,MPI_COMM_WORLD,req(1),rc)
+  !   if (myid >0) then
+  call mpi_irecv(receiveBuffer,msgsize,MPI_INTEGER,source,myid,MPI_COMM_WORLD,req(2),rc)
+  !   end if
+
+  write(*,'(A10,I3,A20,I8,A,I3,A,I3)') 'Sender: ', myid, &
+          ' Sent elements: ', msgsize, &
+          '. Tag: ', tag, '. Receiver: ', dest
+
+  !else
+  !call mpi_irecv(receiveBuffer,msgsize,MPI_INTEGER,source,myid,MPI_COMM_WORLD,status,rc)
+  !end if
+
+  call mpi_waitall(2,req, status,rc)
+
+  if (myid > 0) then
+    
      write(*,'(A10,I3,A,I3)') 'Receiver: ', myid, &
           ' First element: ', receiveBuffer(1)
   end if

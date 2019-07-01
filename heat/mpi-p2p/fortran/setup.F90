@@ -101,7 +101,7 @@ contains
     else if (parallel % rank == parallel%size - 1) then
        field0%data(:,field0%ny+1) = 70.0_dp
     end if
-    field0%data(0,:) = 85.0_dp
+    field0%data(0,:) = 4.0_dp
     field0%data(field0%nx+1,:) = 5.0_dp
 
   end subroutine generate_field

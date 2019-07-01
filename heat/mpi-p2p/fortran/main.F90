@@ -26,6 +26,8 @@ program heat_solve
 
   ! TODO start: initialize MPI
 
+  call mpi_init(ierr)
+
   ! TODO end
 
   call initialize(current, previous, nsteps, parallelization)
@@ -61,6 +63,8 @@ program heat_solve
   call finalize(current, previous)
 
   ! TODO start: finalize MPI
+  call mpi_finalize(ierr)
+
 
   ! TODO end
 

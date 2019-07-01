@@ -17,8 +17,17 @@ program vectorsum
   ! TODO:
   !   Implement here the parallelized version of vector addition,
   !   vecC = vecA + vecB
+!$omp parallel private(i)
+  !$omp do schedule(dynamic)
+  do i=1,nx
+     vecC(i) = vecA(i) + vecB(i)
+  end do
+  !$omp end do
+!$omp end parallel
+
 
   ! Compute the check value
+  write(*,*) vecC(nx), '=', vecA(nx),'+',vecB(nx)
   write(*,*) 'Reduction sum: ', sum(vecC)
 
 end program vectorsum
