@@ -1,4 +1,4 @@
-program hello
+Program hello
 #ifdef _OPENACC
   use openacc
 #endif
