@@ -19,16 +19,16 @@ program vectorsum
 
   sum = 0
   ! TODO: Parallelize the computation
-!$omp parallel private(i,psum,tid)
+!$omp parallel private(i,tid) reduction(+:sum)
   tid = omp_get_thread_num()
-  psum = sum
+
   !$omp do schedule(static)
   do i = 1, nx
-     psum = psum + vecA(i)
+     sum = sum + vecA(i)
   end do
   !$omp end do
-  sum = sum + psum
-  write(*,*) 'I am thread', tid,', I got psum, sum:', psum, sum
+
+  write(*,*) 'I am thread', tid,', I got sum:',  sum
 !$omp end parallel
   write(*,*) 'Sum: ', sum
 end program vectorsum
