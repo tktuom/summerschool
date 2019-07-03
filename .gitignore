@@ -7,6 +7,9 @@
 *.dat
 *.err
 *.png
+*.bin
+core
+prog
 
 #ignore default binary name
 a.out

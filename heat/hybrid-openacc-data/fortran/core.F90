@@ -75,6 +75,7 @@ contains
     !$end parallel loop
 
     ! TODO: Copy the updated boundary to the host
+    !$acc update self(currdata(0:nx+1,0:0), currdata(0:nx+1,ny+1:ny+1))
   end subroutine evolve
 
   ! Start a data region and copy temperature fields to the device
@@ -89,6 +90,8 @@ contains
     prevdata => prev%data
 
     ! TODO: start a data region and copy both fields to the device
+    !$acc enter data copyin(currdata, prevdata)
+
   end subroutine enter_data
 
   ! End a data region and copy temperature fields back to the host
@@ -103,6 +106,8 @@ contains
     prevdata => prev%data
 
     ! TODO: end a data region and copy both fields back to host
+    !$acc exit data copyout(currdata,prevdata)
+
   end subroutine exit_data
 
   ! Copy a temperature field from the device to the host
@@ -115,6 +120,7 @@ contains
     tempdata => temperature%data
 
     ! TODO: copy the temperature field from the device to the host
+    !$acc update self(tempdata)
   end subroutine update_host
 
   ! Copy the outer boundary values from the host to the device
@@ -131,6 +137,7 @@ contains
 
     ! TODO: copy the outer boundary values (coming from the neighbours)
     !       from the host to the device
+    !$acc update device(tempdata(0:nx+1,0:0), tempdata(0:nx+1,ny+1:ny+1))
   end subroutine update_device_boundary
 
 end module core

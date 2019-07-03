@@ -5,7 +5,7 @@ module core
 contains
 
   ! Exchange the boundary data between MPI tasks
-  subroutine exchange(field0, parallel)
+  subroutine exchange(field0, parallel,req)
     use mpi_f08
 
     implicit none
@@ -15,7 +15,8 @@ contains
     
     integer :: ierr
     type(mpi_datatype) :: column
-    type(mpi_request) :: req(2), uest(2)
+    type(mpi_request), intent(inout) :: req(2)
+    type(mpi_request) :: uest(2)
     type(mpi_status) :: status(2)
 
     integer :: tag
@@ -47,15 +48,16 @@ contains
   !   prev (type(field)): values from previous time step
   !   a (real(dp)): update equation constant
   !   dt (real(dp)): time step value
-  subroutine evolve(curr, prev, a, dt)
-
+  subroutine evolve(curr, prev, a, dt,req)
+    use mpi_f08
     implicit none
 
     type(field), intent(inout) :: curr, prev
     real(dp) :: a, dt
-    integer :: i, j, nx, ny
+    integer :: i, j, nx, ny, ierr
     type(mpi_status) :: status(2)
-
+    type(mpi_request), intent(inout) :: req(2)
+    
     nx = curr%nx
     ny = curr%ny
 
@@ -69,7 +71,7 @@ contains
        end do
     end do
 
-    call mpi_waitall(2,req,status)
+    call mpi_waitall(2,req,status,ierr)
 
     do i = 1, nx
        curr%data(i, 1) = prev%data(i, 1) + a * dt * &

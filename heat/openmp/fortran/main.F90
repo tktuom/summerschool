@@ -18,6 +18,7 @@ program heat_solve
   integer, parameter :: image_interval = 500 ! Image output interval
 
   type(parallel_data) :: parallelization
+  type(mpi_request) :: req(2)
   integer :: ierr
 
   integer :: iter
@@ -45,8 +46,8 @@ program heat_solve
   start =  mpi_wtime()
 
   do iter = 1, nsteps
-     call exchange(previous, parallelization)
-     call evolve(current, previous, a, dt)
+     call exchange(previous, parallelization,req)
+     call evolve(current, previous, a, dt,req)
      if (mod(iter, image_interval) == 0) then
         call write_field(current, iter, parallelization)
      end if

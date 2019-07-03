@@ -7,4 +7,6 @@
 #SBATCH --reservation=Summerschool
 #SBATCH -o result.out
 
-srun ./sum
+module load cuda/10.0 pgi/19.1 openmpi/3.1.4 libpng/1.6 
+
+srun nvprof ./sum
